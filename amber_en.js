@@ -202,11 +202,14 @@ app.controller('MainCtrl', ["$scope","$http","NgTableParams",function($scope,$ht
                 $scope.currency = $scope.currency[0].data.filter(function(data){
                    return !!data.date; 
                 }).map(function(data){
-                    return Object.assign({},data,{date:+(new Date(data.date.split('.').join('/')))});
+                    return Object.assign({},data,{string_date:data.date, date:+(new Date(data.date.split('.').join('/')))});
                 }).sort(function(data1,data2){
                     return data1.date - data2.date;
                 }); 
             }
+            console.log('currency');
+            console.log($scope.currency);
+
             make_date_bundle();
             render_table_raw();
             render_table_ball();
@@ -445,7 +448,6 @@ app.controller('MainCtrl', ["$scope","$http","NgTableParams",function($scope,$ht
             if (data.data.length != 0) {
                 var main = postupdate(data);
                 if (counter_main < 7){
-                    debugger;
                     $scope.bundle = splice_array($scope.bundle,main);
                     make_things_done($scope.bundle);
                 }
@@ -610,6 +612,9 @@ app.controller('MainCtrl', ["$scope","$http","NgTableParams",function($scope,$ht
 
         
         $scope.$watch('state',function(new_one,old_one){
+            console.log('state');
+            console.log($scope.state);
+            current_currency();
 
             if (!$scope.multidata){
                 $scope.options.noData = "No data";
@@ -650,7 +655,9 @@ app.controller('MainCtrl', ["$scope","$http","NgTableParams",function($scope,$ht
     
                     if ($scope.currency){
                         index_data = index_data.map(function(index){
-                            var cur = $scope.currency[$scope.currency.length - 1][$scope.state.currency];
+                            debugger;
+                            var temp_ = current_currency();
+                            var cur = current_currency()[$scope.state.currency];
       
                             index.data = index.data.map(function(ind){
                                 return Object.assign({},ind,{value:Math.round(ind.value*cur*100)/100,diff:add_plus_for_positive(Math.round(ind.diff*100)/100),diff_absolute:add_plus_for_positive(Math.round(ind.diff_absolute*cur*100)/100)});
@@ -666,7 +673,7 @@ app.controller('MainCtrl', ["$scope","$http","NgTableParams",function($scope,$ht
                             temp_multidata = temp_multidata.map(function(chart){
                                 var chart_value = chart.values;
                                 chart_value = chart_value.map(function(point){
-                                    point.y = point.y*$scope.currency[$scope.currency.length - 1][$scope.state.currency];
+                                    point.y = point.y*current_currency()[$scope.state.currency];
                                     return point;
                                 });
                                 chart.values = chart_value;
@@ -686,7 +693,7 @@ app.controller('MainCtrl', ["$scope","$http","NgTableParams",function($scope,$ht
                 var index_data = filter_index_country(angular.copy($scope.store_indexes));
 
                     index_data = index_data.map(function(index){
-                        var cur = $scope.currency[$scope.currency.length - 1][$scope.state.currency];
+                        var cur = current_currency()[$scope.state.currency];
 
                         index.data = index.data.map(function(ind){
                             return Object.assign({},ind,{value:Math.round(ind.value*cur*100)/100,diff:add_plus_for_positive(Math.round(ind.diff*100)/100),diff_absolute:add_plus_for_positive(Math.round(ind.diff_absolute*cur*100)/100)});
@@ -720,7 +727,7 @@ app.controller('MainCtrl', ["$scope","$http","NgTableParams",function($scope,$ht
                 var index_data = filter_index_country(angular.copy($scope.store_indexes));
 
                     index_data = index_data.map(function(index){
-                        var cur = $scope.currency[$scope.currency.length - 1][$scope.state.currency];
+                        var cur = current_currency()[$scope.state.currency];
  
                         index.data = index.data.map(function(ind){
                             return Object.assign({},ind,{value:Math.round(ind.value*cur*100)/100,diff:add_plus_for_positive(Math.round(ind.diff*100)/100),diff_absolute:add_plus_for_positive(Math.round(ind.diff_absolute*cur*100)/100)});
@@ -789,7 +796,7 @@ app.controller('MainCtrl', ["$scope","$http","NgTableParams",function($scope,$ht
 
                 if ($scope.currency){
                     index_data = index_data.map(function(index){
-                        var cur = $scope.currency[$scope.currency.length - 1][$scope.state.currency];
+                        var cur = current_currency()[$scope.state.currency];
                
                         index.data = index.data.map(function(ind){
                             return Object.assign({},ind,{value:Math.round(ind.value*cur*100)/100,diff:add_plus_for_positive(Math.round(ind.diff*100)/100),diff_absolute:add_plus_for_positive(Math.round(ind.diff_absolute*cur*100)/100)});
@@ -801,12 +808,12 @@ app.controller('MainCtrl', ["$scope","$http","NgTableParams",function($scope,$ht
                         return val.sub_type == 'Amber Index (AI)';
                     })[0];
                     if (($scope.multidata.length > 0) && (new_one.currency != old_one.currency)){
-                        //rebuild_multibundle($scope.graph.graph_time,$scope.graph.graph_type);
+                        rebuild_multibundle($scope.graph.graph_time,$scope.graph.graph_type);
                         // var temp_multidata = angular.copy($scope.multidata_base);
                         // temp_multidata = temp_multidata.map(function(chart){
                         //     var chart_value = chart.values;
                         //     chart_value = chart_value.map(function(point){
-                        //         point.y = point.y*$scope.currency[$scope.currency.length - 1][$scope.state.currency];
+                        //         point.y = point.y*current_currency()[$scope.state.currency];
                         //         return point;
                         //     });
                         //     chart.values = chart_value;
@@ -850,7 +857,7 @@ app.controller('MainCtrl', ["$scope","$http","NgTableParams",function($scope,$ht
                     return $scope.state.date.value == ind.time.toString();
                 });
                         if ($scope.currency.length > 0){
-                            var cur = $scope.currency[$scope.currency.length - 1][$scope.state.currency];
+                            var cur = current_currency()[$scope.state.currency];
                         } else {
                             var cur = 1;
                         }
@@ -1163,7 +1170,7 @@ app.controller('MainCtrl', ["$scope","$http","NgTableParams",function($scope,$ht
                                     return localtime < point.x;
                                 });
                                 chart_value = chart_value.map(function(point){
-                                    point.y = point.y*$scope.currency[$scope.currency.length - 1][$scope.state.currency];
+                                    point.y = point.y*current_currency(point.x)[$scope.state.currency];
                                     return point;
                                 });
                                 chart.values = chart_value;
@@ -1395,7 +1402,7 @@ app.controller('MainCtrl', ["$scope","$http","NgTableParams",function($scope,$ht
                 values_to_line = data.map(function(el){
                         return {
                             x:+(new Date(el.x.split('.').join('/'))),
-                            y:+el.y*$scope.currency[$scope.currency.length - 1][$scope.state.currency]
+                            y:+el.y*current_currency(el.x)[$scope.state.currency]
                         }
                     });
                 
@@ -1639,7 +1646,7 @@ app.controller('MainCtrl', ["$scope","$http","NgTableParams",function($scope,$ht
             if ($scope.currency.length == 0) {
                 cur = 1;
             } else {
-                cur = $scope.currency[$scope.currency.length - 1][$scope.state.currency];
+                cur = current_currency()[$scope.state.currency];
             }
             return base.map(function(item){
                return Object.assign({},item,{form0:Math.round(item.form0*cur * 100) / 100,
@@ -1892,7 +1899,26 @@ app.controller('MainCtrl', ["$scope","$http","NgTableParams",function($scope,$ht
         
         
   
-        
+        function current_currency(date){
+            console.log(date);
+            debugger;
+            if (date){
+                if (typeof date == "number"){
+                    var current_date = $scope.format_date(date).split('.');
+                    current_date = current_date[2] + '.' +current_date[1] + '.' + current_date[0];
+                } else {
+                    var current_date = date;
+                }
+                
+            } else {
+                var current_date = $scope.state.date.name.split('.');
+                current_date = current_date[2] + '.' +current_date[1] + '.' + current_date[0];
+            }
+            var current_currency_object = $scope.currency.filter(function (cur) {
+               return cur.string_date === current_date;
+            });
+            return current_currency_object[0];
+        }
         
         
         $scope.change_state = function(updates) {
