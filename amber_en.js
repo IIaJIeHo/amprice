@@ -64,10 +64,10 @@ app.controller('MainCtrl', ["$scope","$http","NgTableParams",function($scope,$ht
   function call_data(){
     init_default_data();
     set_default_state_for_amber_type();
-    call_version();
     if (window.localStorage){
         var tabledata = store.get('tabledata');
         $scope.version = store.get('version');
+        call_version();
     } 
     if (tabledata){
         $scope.get_from_localStorage = true;
@@ -95,6 +95,7 @@ app.controller('MainCtrl', ["$scope","$http","NgTableParams",function($scope,$ht
                     if ($scope.version != ver){
                         if (window.localStorage){
                         store.set('version',ver);
+                        store.remove('tabledata');
                         start_calling();
                         }
                         
